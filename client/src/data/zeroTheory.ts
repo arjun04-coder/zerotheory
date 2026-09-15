@@ -9,13 +9,12 @@ export const siteContent = {
   joinBody: "Whether you're starting your first project or already building something of your own, ZeroTheory is a place to learn, build, and grow.",
 };
 
-// EDIT IMPACT NUMBERS HERE — keep XX+ when a value is not verified yet.
+// EDIT IMPACT NUMBERS HERE — `value` is what shows (add "+" for "or more"), `numeric` drives the count-up animation, `note` is optional.
 export const impactStats = [
   { value: "700+", numeric: 700, label: "Students mentored", note: "Worldwide" },
   { value: "5+", numeric: 5, label: "Mini hackathons", note: "Hands-on builds" },
-  { value: "XX+", label: "Workshops & sessions", note: "Team to verify" },
-  { value: "XX+", label: "Projects", note: "Team to verify" },
-  { value: "XX+", label: "Collaborations", note: "Team to verify" },
+  { value: "20", numeric: 20, label: "Workshops & sessions" },
+  { value: "5+", numeric: 5, label: "Collaborations" },
 ];
 
 export const pillars = [
