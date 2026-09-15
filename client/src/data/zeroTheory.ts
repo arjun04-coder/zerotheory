@@ -7,6 +7,7 @@ export const siteContent = {
   heroBody: "A student-led technology and innovation community focused on learning, building, and creating opportunities.",
   aboutBody: "ZeroTheory is a student-driven technology and innovation community focused on turning curiosity into practical skills, projects, and opportunities.",
   joinBody: "Whether you're starting your first project or already building something of your own, ZeroTheory is a place to learn, build, and grow.",
+  joinUrl: "https://chat.whatsapp.com/GizlmYwizaNBAQxTvV942Z", // WhatsApp community invite used by the Join button
 };
 
 // EDIT IMPACT NUMBERS HERE — `value` is what shows (add "+" for "or more"), `numeric` drives the count-up animation, `note` is optional.
@@ -31,12 +32,12 @@ export const archiveItems = [
   { title: "Next up: 2.0", date: "ZERO THEORY / 04", category: "FUTURE", description: "The next version is being built in public, one thoughtful detail at a time.", tone: "cream", image: "/images/zerotheory-hero.jpg" },
 ];
 
-// Replace placeholder links once final community/contact links are provided.
+// Contact channels. `value` is the short text shown next to each label; http(s) links open in a new tab.
 export const contactLinks = [
-  { label: "Email", value: "YOUR_EMAIL_HERE", href: "mailto:YOUR_EMAIL_HERE" },
-  { label: "LinkedIn", value: "YOUR_LINKEDIN_URL_HERE", href: "#" },
-  { label: "Instagram", value: "YOUR_INSTAGRAM_URL_HERE", href: "#" },
-  { label: "GitHub", value: "YOUR_GITHUB_URL_HERE", href: "#" },
+  { label: "Email", value: "hr.zerotheory@gmail.com", href: "mailto:hr.zerotheory@gmail.com" },
+  { label: "LinkedIn", value: "zerotheory-zeroes-to-heroes", href: "https://www.linkedin.com/company/zerotheory-zeroes-to-heroes/" },
+  { label: "Instagram", value: "@zerotheoryorg", href: "https://www.instagram.com/zerotheoryorg/" },
+  { label: "GitHub", value: "zeroes-to-heroes", href: "https://github.com/revanshsharma/zeroes-to-heroes" },
 ];
 
 export const platformFeatures = ["GAMIFIED LEARNING", "CHALLENGES", "PROJECTS", "ACHIEVEMENTS", "PROGRESSION"];
