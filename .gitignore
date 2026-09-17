@@ -17,3 +17,6 @@ dist/
 # OS clutter
 .DS_Store
 Thumbs.db
+
+# Sanity Studio runtime cache
+.sanity/
