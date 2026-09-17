@@ -24,13 +24,18 @@ export const pillars = [
   { index: "03", title: "Grow", body: "Connect with people, opportunities, and communities.", color: "pink" },
 ];
 
-// ADD NEW ARCHIVE ITEM HERE. Use replacement images when the team supplies real documentation.
+// ARCHIVE CARDS. `image` is the picture that ships with the site; it stays in
+// place until someone adds photos in Sanity and ticks one as the card cover.
+// `docId` is the Sanity document for that card - it must match
+// studio/lib/archive-cards.ts.
 export const archiveItems = [
-  { title: "The starting point", date: "ZERO THEORY / 01", category: "FOUNDATIONS", description: "A visual study of the early ideas that shaped the community.", tone: "yellow", image: "/images/zerotheory-square.jpg" },
-  { title: "Make it real", date: "ZERO THEORY / 02", category: "PROJECTS", description: "A reminder that practical work is the fastest way to learn.", tone: "blue", image: "/images/zerotheory-hero.jpg" },
-  { title: "Build together", date: "ZERO THEORY / 03", category: "COMMUNITY", description: "A visual study of the people and moments behind the work.", tone: "pink", image: "/images/zerotheory-square.jpg" },
-  { title: "Next up: 2.0", date: "ZERO THEORY / 04", category: "FUTURE", description: "The next version is being built in public, one thoughtful detail at a time.", tone: "cream", image: "/images/zerotheory-hero.jpg" },
+  { docId: "archive-starting-point", title: "The starting point", date: "ZERO THEORY / 01", category: "FOUNDATIONS", description: "A visual study of the early ideas that shaped the community.", tone: "yellow", image: "/images/zerotheory-square.jpg" },
+  { docId: "archive-make-it-real", title: "Make it real", date: "ZERO THEORY / 02", category: "PROJECTS", description: "A reminder that practical work is the fastest way to learn.", tone: "blue", image: "/images/zerotheory-hero.jpg" },
+  { docId: "archive-build-together", title: "Build together", date: "ZERO THEORY / 03", category: "COMMUNITY", description: "A visual study of the people and moments behind the work.", tone: "pink", image: "/images/zerotheory-square.jpg" },
+  { docId: "archive-next-up", title: "Next up: 2.0", date: "ZERO THEORY / 04", category: "FUTURE", description: "The next version is being built in public, one thoughtful detail at a time.", tone: "cream", image: "/images/zerotheory-hero.jpg" },
 ];
+
+export const archiveDocIds = archiveItems.map((item) => item.docId);
 
 // Contact channels. `value` is the short text shown next to each label; http(s) links open in a new tab.
 export const contactLinks = [

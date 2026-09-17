@@ -1,7 +1,16 @@
 import { AnimatePresence, motion, useInView, useMotionValue, useSpring, type Variants } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, ChevronDown, ExternalLink, Menu, MoveUpRight, Plus, Sparkles, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { archiveItems, contactLinks, impactStats, partners, pillars, platformFeatures, siteContent } from "@/data/zeroTheory";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { archiveDocIds, archiveItems, contactLinks, impactStats, partners, pillars, platformFeatures, siteContent } from "@/data/zeroTheory";
+import { useArchiveGalleries } from "@/hooks/useArchiveGalleries";
+import { coverSrcSet, coverUrl, pickCover } from "@/lib/sanity";
+import type { GalleryPhoto } from "@/lib/sanity";
+
+// The gallery pulls in a dialog and a carousel; load it only when a visitor
+// actually opens a card, so the landing page stays light.
+const ArchiveGallery = lazy(() =>
+  import("@/components/ArchiveGallery").then((module) => ({ default: module.ArchiveGallery }))
+);
 
 const reveal = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: "easeOut" as const } } } satisfies Variants;
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.09 } } } satisfies Variants;
@@ -48,8 +57,129 @@ function Impact() {
   return <section id="impact" className="grain overflow-hidden bg-[#fcea10] py-24"><div className="container"><div className="flex flex-col justify-between gap-8 md:flex-row md:items-end"><div><SectionLabel>02 / Proof of work</SectionLabel><h2 className="display mt-7 max-w-[610px] text-[clamp(3.5rem,8vw,8.3rem)]">BUILT<br /><span className="text-[#e6007e]">FROM ZERO.</span></h2></div><p className="max-w-[260px] text-sm leading-relaxed text-black/65 md:pb-2">Impact is a work in progress. These are the verified signals we can share today.</p></div><div className="mt-16 grid border-t border-black/25 sm:grid-cols-2 lg:grid-cols-4">{impactStats.map((stat, index) => <motion.div key={stat.label} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }} variants={reveal} transition={{ delay: index * .06 }} className="border-b border-black/25 py-7 sm:border-r sm:px-5 lg:border-b-0 lg:first:pl-0"><div className="display text-[clamp(3.6rem,6vw,5.8rem)]"><Counter value={stat.value} numeric={stat.numeric} /></div><div className="mt-2 text-sm font-bold uppercase tracking-[0.06em]">{stat.label}</div>{stat.note && <div className="mono mt-2 text-[9px] text-black/50">{stat.note}</div>}</motion.div>)}</div></div><div className="mt-20 overflow-hidden border-y border-black/20 py-3"><div className="marquee flex w-max gap-8 text-[clamp(2rem,4vw,4rem)] font-bold uppercase tracking-[-0.07em]"><span>LEARN</span><span className="text-[#1d71b8]">→</span><span>BUILD</span><span className="text-[#e6007e]">→</span><span>GROW</span><span className="text-[#1d71b8]">→</span><span>LEARN</span><span className="text-[#1d71b8]">→</span><span>BUILD</span><span className="text-[#e6007e]">→</span><span>GROW</span></div></div></section>;
 }
 
+type ArchiveItem = (typeof archiveItems)[number];
+
+const ARCHIVE_SPANS = ["md:col-span-7 md:min-h-[460px]", "md:col-span-5", "md:col-span-5", "md:col-span-7"];
+const ARCHIVE_COVER_WIDTHS = [600, 900, 1200, 1600];
+
+function archiveTone(tone: string) {
+  if (tone === "yellow") return "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/10 to-[#fcea10]/10";
+  if (tone === "pink") return "bg-gradient-to-t from-[#e6007e]/90 via-[#e6007e]/10 to-transparent";
+  return "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/20 to-transparent";
+}
+
+function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index: number; photos: GalleryPhoto[]; onOpen: (trigger: HTMLButtonElement) => void }) {
+  const cover = pickCover(photos);
+  const hasGallery = photos.length > 0;
+  const ratio = index === 0 || index === 3 ? 1.6 : 1.35;
+  const imageClass = `absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out${hasGallery ? " group-hover:scale-110" : ""}`;
+
+  return (
+    <motion.article
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.12 }}
+      variants={reveal}
+      className={`group relative min-h-[330px] overflow-hidden rounded-[1.25rem] border border-black/10 ${ARCHIVE_SPANS[index]}`}
+    >
+      {cover?.image ? (
+        <img
+          src={coverUrl(cover.image, 1200, Math.round(1200 / ratio))}
+          srcSet={coverSrcSet(cover.image, ARCHIVE_COVER_WIDTHS, ratio)}
+          sizes="(max-width: 768px) 92vw, 720px"
+          alt={cover.alt ?? ""}
+          loading="lazy"
+          decoding="async"
+          className={imageClass}
+          style={cover.lqip ? { backgroundImage: `url(${cover.lqip})`, backgroundSize: "cover" } : undefined}
+        />
+      ) : (
+        <img src={item.image} alt="" loading="lazy" decoding="async" className={imageClass} />
+      )}
+      <div className={`absolute inset-0 ${archiveTone(item.tone)}`} />
+      <div className="relative flex h-full min-h-[330px] flex-col justify-between p-6 text-white md:min-h-0">
+        <div className="flex items-start justify-between">
+          <span className="mono rounded-full border border-white/40 bg-black/15 px-3 py-1.5 text-[9px]">{item.category}</span>
+          {hasGallery && (
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-45">
+              <ArrowUpRight size={16} />
+            </span>
+          )}
+        </div>
+        <div>
+          <div className="mono mb-3 text-[9px] text-white/65">{item.date}</div>
+          <h3 className="display max-w-[420px] text-4xl uppercase md:text-5xl">{item.title}</h3>
+          <p className="mt-3 max-w-[390px] text-sm leading-relaxed text-white/75">{item.description}</p>
+          {hasGallery && (
+            <div className="mono mt-4 text-[10px] text-[#fcea10]">
+              {photos.length} photo{photos.length === 1 ? "" : "s"} · open gallery
+            </div>
+          )}
+        </div>
+      </div>
+      {hasGallery && (
+        <button type="button" onClick={(event) => onOpen(event.currentTarget)} className="focus-ring absolute inset-0 z-10 h-full w-full">
+          <span className="sr-only">{`Open the ${item.title} gallery, ${photos.length} photo${photos.length === 1 ? "" : "s"}`}</span>
+        </button>
+      )}
+    </motion.article>
+  );
+}
+
 function Archive() {
-  return <section id="archive" className="grain bg-[#f5f1e7] py-28 md:py-36"><div className="container"><div className="flex flex-col justify-between gap-7 md:flex-row md:items-end"><div><SectionLabel>03 / The archive</SectionLabel><h2 className="display mt-7 text-[clamp(3.6rem,8vw,8rem)]">THE<br /><span className="text-[#1d71b8]">ARCHIVE.</span></h2></div><div className="max-w-[300px] md:pb-2"><p className="text-sm leading-relaxed text-black/60">A visual collection of the ZeroTheory journey. Real documentation arrives as the next chapters land.</p><div className="mono mt-5 text-[10px] text-[#e6007e]">Workshops · Hackathons · Events · Projects</div></div></div><div className="mt-16 grid gap-4 md:grid-cols-12">{archiveItems.map((item, index) => <motion.article key={item.title} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.12 }} variants={reveal} className={`group relative min-h-[330px] overflow-hidden rounded-[1.25rem] border border-black/10 ${index === 0 ? "md:col-span-7 md:min-h-[460px]" : index === 1 ? "md:col-span-5" : index === 2 ? "md:col-span-5" : "md:col-span-7"}`}><img src={item.image} alt="Abstract ZeroTheory visual placeholder" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" /><div className={`absolute inset-0 ${item.tone === "yellow" ? "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/10 to-[#fcea10]/10" : item.tone === "pink" ? "bg-gradient-to-t from-[#e6007e]/90 via-[#e6007e]/10 to-transparent" : "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/20 to-transparent"}`} /><div className="relative flex h-full min-h-[330px] flex-col justify-between p-6 text-white md:min-h-0"><div className="flex items-start justify-between"><span className="mono rounded-full border border-white/40 bg-black/15 px-3 py-1.5 text-[9px]">{item.category}</span><span className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight size={16} /></span></div><div><div className="mono mb-3 text-[9px] text-white/65">{item.date}</div><h3 className="display max-w-[420px] text-4xl uppercase md:text-5xl">{item.title}</h3><p className="mt-3 max-w-[390px] text-sm leading-relaxed text-white/75">{item.description}</p></div></div></motion.article>)}</div></div></section>;
+  const galleries = useArchiveGalleries(archiveDocIds);
+  // `activeItem` stays set after closing so the dialog can hand focus back to
+  // the card that opened it.
+  const [activeItem, setActiveItem] = useState<ArchiveItem | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  return (
+    <section id="archive" className="grain bg-[#f5f1e7] py-28 md:py-36">
+      <div className="container">
+        <div className="flex flex-col justify-between gap-7 md:flex-row md:items-end">
+          <div>
+            <SectionLabel>03 / The archive</SectionLabel>
+            <h2 className="display mt-7 text-[clamp(3.6rem,8vw,8rem)]">THE<br /><span className="text-[#1d71b8]">ARCHIVE.</span></h2>
+          </div>
+          <div className="max-w-[300px] md:pb-2">
+            <p className="text-sm leading-relaxed text-black/60">A visual collection of the ZeroTheory journey. Real documentation arrives as the next chapters land.</p>
+            <div className="mono mt-5 text-[10px] text-[#e6007e]">Workshops · Hackathons · Events · Projects</div>
+          </div>
+        </div>
+        <div className="mt-16 grid gap-4 md:grid-cols-12">
+          {archiveItems.map((item, index) => (
+            <ArchiveCard
+              key={item.docId}
+              item={item}
+              index={index}
+              photos={galleries[item.docId] ?? []}
+              onOpen={(trigger) => {
+                triggerRef.current = trigger;
+                setActiveItem(item);
+                setGalleryOpen(true);
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      {activeItem && (
+        <Suspense fallback={null}>
+          <ArchiveGallery
+            open={galleryOpen}
+            onOpenChange={(open) => {
+              setGalleryOpen(open);
+              // Hand focus back to the card that opened the gallery.
+              if (!open) requestAnimationFrame(() => triggerRef.current?.focus());
+            }}
+            title={activeItem.title}
+            category={activeItem.category}
+            photos={galleries[activeItem.docId] ?? []}
+          />
+        </Suspense>
+      )}
+    </section>
+  );
 }
 
 function NextVersion() {
