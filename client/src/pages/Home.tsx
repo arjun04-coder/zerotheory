@@ -72,7 +72,7 @@ function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index
   const cover = pickCover(photos);
   const hasGallery = photos.length > 0;
   const ratio = index === 0 || index === 3 ? 1.6 : 1.35;
-  const imageClass = `absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out${hasGallery ? " group-hover:scale-110" : ""}`;
+  const imageClass = "absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
 
   return (
     <motion.article
@@ -100,11 +100,9 @@ function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index
       <div className="relative flex h-full min-h-[330px] flex-col justify-between p-6 text-white md:min-h-0">
         <div className="flex items-start justify-between">
           <span className="mono rounded-full border border-white/40 bg-black/15 px-3 py-1.5 text-[9px]">{item.category}</span>
-          {hasGallery && (
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-45">
-              <ArrowUpRight size={16} />
-            </span>
-          )}
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-45">
+            <ArrowUpRight size={16} />
+          </span>
         </div>
         <div>
           <div className="mono mb-3 text-[9px] text-white/65">{item.date}</div>
