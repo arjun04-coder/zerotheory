@@ -1,0 +1,22 @@
+# dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# local logs from the Manus dev plugin
+.manus-logs/
+
+# environment files
+.env
+.env.*
+!.env.example
+
+# git bundles used to hand off commits
+*.bundle
+
+# OS clutter
+.DS_Store
+Thumbs.db
+
+# Sanity Studio runtime cache
+.sanity/

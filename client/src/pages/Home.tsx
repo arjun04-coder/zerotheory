@@ -1,7 +1,16 @@
 import { AnimatePresence, motion, useInView, useMotionValue, useSpring, type Variants } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, ChevronDown, ExternalLink, Menu, MoveUpRight, Plus, Sparkles, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { archiveItems, contactLinks, impactStats, partners, pillars, platformFeatures, siteContent } from "@/data/zeroTheory";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { archiveDocIds, archiveItems, contactLinks, impactStats, partners, pillars, platformFeatures, siteContent } from "@/data/zeroTheory";
+import { useArchiveGalleries } from "@/hooks/useArchiveGalleries";
+import { coverSrcSet, coverUrl, pickCover } from "@/lib/sanity";
+import type { GalleryPhoto } from "@/lib/sanity";
+
+// The gallery pulls in a dialog and a carousel; load it only when a visitor
+// actually opens a card, so the landing page stays light.
+const ArchiveGallery = lazy(() =>
+  import("@/components/ArchiveGallery").then((module) => ({ default: module.ArchiveGallery }))
+);
 
 const reveal = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: "easeOut" as const } } } satisfies Variants;
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.09 } } } satisfies Variants;
@@ -11,11 +20,11 @@ function SectionLabel({ children, inverse = false }: { children: React.ReactNode
 }
 
 function ArrowButton({ children, href = "#join", inverse = false }: { children: React.ReactNode; href?: string; inverse?: boolean }) {
-  return <a href={href} className={`focus-ring group inline-flex items-center gap-4 rounded-full border px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-200 active:scale-[0.97] ${inverse ? "border-white/35 bg-white hover:bg-[#fcea10]" : "border-[#1d1d1b] bg-[#1d1d1b] text-white hover:bg-[#e6007e] hover:text-white"}`}><span style={{ color: inverse ? "#1d1d1b" : "#ffffff" }}>{children}</span><span className="grid h-7 w-7 place-items-center rounded-full bg-[#fcea10] text-[#1d1d1b] transition-transform duration-200 group-hover:rotate-45"><ArrowUpRight size={14} strokeWidth={2.5} /></span></a>;
+  return <a href={href} {...(/^https?:\/\//.test(href) ? { target: "_blank", rel: "noopener noreferrer" } : {})} className={`focus-ring group inline-flex items-center gap-4 rounded-full border px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-200 active:scale-[0.97] ${inverse ? "border-white/35 bg-white hover:bg-[#fcea10]" : "border-[#1d1d1b] bg-[#1d1d1b] text-white hover:bg-[#e6007e] hover:text-white"}`}><span style={{ color: inverse ? "#1d1d1b" : "#ffffff" }}>{children}</span><span className="grid h-7 w-7 place-items-center rounded-full bg-[#fcea10] text-[#1d1d1b] transition-transform duration-200 group-hover:rotate-45"><ArrowUpRight size={14} strokeWidth={2.5} /></span></a>;
 }
 
-function Logo({ light = false }: { light?: boolean }) {
-  return <a href="#top" aria-label="ZeroTheory home" className={`focus-ring group inline-flex items-center gap-2 ${light ? "text-white" : "text-[#1d1d1b]"}`}><span className="relative grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-[#fcea10] text-[13px] font-bold text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-12"><span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-[#e6007e]" /><span className="relative">0</span></span><span className="text-[15px] font-bold tracking-[-0.06em]">ZERO<span className={light ? "text-[#fcea10]" : "text-[#1d71b8]"}>THEORY</span></span></a>;
+function Logo({ className = "h-12" }: { className?: string }) {
+  return <a href="#top" aria-label="ZeroTheory home" className="focus-ring group inline-flex items-center"><picture><source srcSet="/images/zerotheory-logo.webp" type="image/webp" /><img src="/images/zerotheory-logo.png" alt="ZeroTheory" width={720} height={396} decoding="async" className={`${className} w-auto transition-transform duration-300 group-hover:-rotate-2`} /></picture></a>;
 }
 
 function Counter({ value, numeric }: { value: string; numeric?: number }) {
@@ -26,13 +35,14 @@ function Counter({ value, numeric }: { value: string; numeric?: number }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => { const unsubscribe = spring.on("change", (latest) => setDisplay(Math.round(latest))); return unsubscribe; }, [spring]);
   useEffect(() => { if (inView && numeric) motionValue.set(numeric); }, [inView, numeric, motionValue]);
-  return <span ref={ref}>{numeric ? `${display}+` : value}</span>;
+  const suffix = value.replace(/^[\d,.]+/, "");
+  return <span ref={ref}>{numeric ? `${display}${suffix}` : value}</span>;
 }
 
 function Nav() {
   const [open, setOpen] = useState(false);
   const links = [["About", "#about"], ["Impact", "#impact"], ["Archive", "#archive"], ["2.0", "#next"], ["Community", "#community"], ["Contact", "#contact"]];
-  return <header className="absolute left-0 right-0 top-0 z-50"><div className="container flex h-20 items-center justify-between"><Logo light /><nav className="hidden items-center gap-6 md:flex">{links.map(([label, href]) => <a key={label} href={href} className="focus-ring text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 transition-colors hover:text-[#fcea10]">{label}</a>)}<a href="#join" className="focus-ring rounded-full bg-[#fcea10] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1d1d1b] transition-transform hover:-translate-y-0.5 active:scale-[0.97]">Join the community</a></nav><button aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)} className="focus-ring grid h-10 w-10 place-items-center rounded-full border border-white/30 text-white md:hidden">{open ? <X size={19} /> : <Menu size={19} />}</button></div><AnimatePresence>{open && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mx-4 mt-1 rounded-2xl border border-white/15 bg-[#1d1d1b]/95 p-3 shadow-2xl backdrop-blur-xl md:hidden">{links.map(([label, href]) => <a onClick={() => setOpen(false)} key={label} href={href} className="block rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] text-white/85 hover:bg-white/10">{label}</a>)}<a onClick={() => setOpen(false)} href="#join" className="mt-2 block rounded-xl bg-[#fcea10] px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-[#1d1d1b]">Join the community</a></motion.div>}</AnimatePresence></header>;
+  return <header className="absolute left-0 right-0 top-0 z-50"><div className="container flex h-20 items-center justify-between"><Logo className="h-12 md:h-14" /><nav className="hidden items-center gap-6 md:flex">{links.map(([label, href]) => <a key={label} href={href} className="focus-ring text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 transition-colors hover:text-[#fcea10]">{label}</a>)}<a href="#join" className="focus-ring rounded-full bg-[#fcea10] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1d1d1b] transition-transform hover:-translate-y-0.5 active:scale-[0.97]">Join the community</a></nav><button aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)} className="focus-ring grid h-10 w-10 place-items-center rounded-full border border-white/30 text-white md:hidden">{open ? <X size={19} /> : <Menu size={19} />}</button></div><AnimatePresence>{open && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mx-4 mt-1 rounded-2xl border border-white/15 bg-[#1d1d1b]/95 p-3 shadow-2xl backdrop-blur-xl md:hidden">{links.map(([label, href]) => <a onClick={() => setOpen(false)} key={label} href={href} className="block rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] text-white/85 hover:bg-white/10">{label}</a>)}<a onClick={() => setOpen(false)} href="#join" className="mt-2 block rounded-xl bg-[#fcea10] px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-[#1d1d1b]">Join the community</a></motion.div>}</AnimatePresence></header>;
 }
 
 function Hero() {
@@ -44,11 +54,130 @@ function About() {
 }
 
 function Impact() {
-  return <section id="impact" className="grain overflow-hidden bg-[#fcea10] py-24"><div className="container"><div className="flex flex-col justify-between gap-8 md:flex-row md:items-end"><div><SectionLabel>02 / Proof of work</SectionLabel><h2 className="display mt-7 max-w-[610px] text-[clamp(3.5rem,8vw,8.3rem)]">BUILT<br /><span className="text-[#e6007e]">FROM ZERO.</span></h2></div><p className="max-w-[260px] text-sm leading-relaxed text-black/65 md:pb-2">Impact is a work in progress. These are the verified signals we can share today.</p></div><div className="mt-16 grid border-t border-black/25 sm:grid-cols-2 lg:grid-cols-5">{impactStats.map((stat, index) => <motion.div key={stat.label} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }} variants={reveal} transition={{ delay: index * .06 }} className="border-b border-black/25 py-7 sm:border-r sm:px-5 lg:border-b-0 lg:first:pl-0"><div className="display text-[clamp(3.6rem,6vw,5.8rem)]"><Counter value={stat.value} numeric={stat.numeric} /></div><div className="mt-2 text-sm font-bold uppercase tracking-[0.06em]">{stat.label}</div><div className="mono mt-2 text-[9px] text-black/50">{stat.note}</div></motion.div>)}</div></div><div className="mt-20 overflow-hidden border-y border-black/20 py-3"><div className="marquee flex w-max gap-8 text-[clamp(2rem,4vw,4rem)] font-bold uppercase tracking-[-0.07em]"><span>LEARN</span><span className="text-[#1d71b8]">→</span><span>BUILD</span><span className="text-[#e6007e]">→</span><span>GROW</span><span className="text-[#1d71b8]">→</span><span>LEARN</span><span className="text-[#1d71b8]">→</span><span>BUILD</span><span className="text-[#e6007e]">→</span><span>GROW</span></div></div></section>;
+  return <section id="impact" className="grain overflow-hidden bg-[#fcea10] py-24"><div className="container"><div className="flex flex-col justify-between gap-8 md:flex-row md:items-end"><div><SectionLabel>02 / Proof of work</SectionLabel><h2 className="display mt-7 max-w-[610px] text-[clamp(3.5rem,8vw,8.3rem)]">BUILT<br /><span className="text-[#e6007e]">FROM ZERO.</span></h2></div><p className="max-w-[260px] text-sm leading-relaxed text-black/65 md:pb-2">Impact is a work in progress. These are the verified signals we can share today.</p></div><div className="mt-16 grid border-t border-black/25 sm:grid-cols-2 lg:grid-cols-4">{impactStats.map((stat, index) => <motion.div key={stat.label} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.4 }} variants={reveal} transition={{ delay: index * .06 }} className="border-b border-black/25 py-7 sm:border-r sm:px-5 lg:border-b-0 lg:first:pl-0"><div className="display text-[clamp(3.6rem,6vw,5.8rem)]"><Counter value={stat.value} numeric={stat.numeric} /></div><div className="mt-2 text-sm font-bold uppercase tracking-[0.06em]">{stat.label}</div>{stat.note && <div className="mono mt-2 text-[9px] text-black/50">{stat.note}</div>}</motion.div>)}</div></div><div className="mt-20 overflow-hidden border-y border-black/20 py-3"><div className="marquee flex w-max gap-8 text-[clamp(2rem,4vw,4rem)] font-bold uppercase tracking-[-0.07em]"><span>LEARN</span><span className="text-[#1d71b8]">→</span><span>BUILD</span><span className="text-[#e6007e]">→</span><span>GROW</span><span className="text-[#1d71b8]">→</span><span>LEARN</span><span className="text-[#1d71b8]">→</span><span>BUILD</span><span className="text-[#e6007e]">→</span><span>GROW</span></div></div></section>;
+}
+
+type ArchiveItem = (typeof archiveItems)[number];
+
+const ARCHIVE_SPANS = ["md:col-span-7 md:min-h-[460px]", "md:col-span-5", "md:col-span-5", "md:col-span-7"];
+const ARCHIVE_COVER_WIDTHS = [600, 900, 1200, 1600];
+
+function archiveTone(tone: string) {
+  if (tone === "yellow") return "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/10 to-[#fcea10]/10";
+  if (tone === "pink") return "bg-gradient-to-t from-[#e6007e]/90 via-[#e6007e]/10 to-transparent";
+  return "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/20 to-transparent";
+}
+
+function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index: number; photos: GalleryPhoto[]; onOpen: (trigger: HTMLButtonElement) => void }) {
+  const cover = pickCover(photos);
+  const hasGallery = photos.length > 0;
+  const ratio = index === 0 || index === 3 ? 1.6 : 1.35;
+  const imageClass = "absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
+
+  return (
+    <motion.article
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.12 }}
+      variants={reveal}
+      className={`group relative min-h-[330px] overflow-hidden rounded-[1.25rem] border border-black/10 ${ARCHIVE_SPANS[index]}`}
+    >
+      {cover?.image ? (
+        <img
+          src={coverUrl(cover.image, 1200, Math.round(1200 / ratio))}
+          srcSet={coverSrcSet(cover.image, ARCHIVE_COVER_WIDTHS, ratio)}
+          sizes="(max-width: 768px) 92vw, 720px"
+          alt={cover.alt ?? ""}
+          loading="lazy"
+          decoding="async"
+          className={imageClass}
+          style={cover.lqip ? { backgroundImage: `url(${cover.lqip})`, backgroundSize: "cover" } : undefined}
+        />
+      ) : (
+        <img src={item.image} alt="" loading="lazy" decoding="async" className={imageClass} />
+      )}
+      <div className={`absolute inset-0 ${archiveTone(item.tone)}`} />
+      <div className="relative flex h-full min-h-[330px] flex-col justify-between p-6 text-white md:min-h-0">
+        <div className="flex items-start justify-between">
+          <span className="mono rounded-full border border-white/40 bg-black/15 px-3 py-1.5 text-[9px]">{item.category}</span>
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-45">
+            <ArrowUpRight size={16} />
+          </span>
+        </div>
+        <div>
+          <div className="mono mb-3 text-[9px] text-white/65">{item.date}</div>
+          <h3 className="display max-w-[420px] text-4xl uppercase md:text-5xl">{item.title}</h3>
+          <p className="mt-3 max-w-[390px] text-sm leading-relaxed text-white/75">{item.description}</p>
+          {hasGallery && (
+            <div className="mono mt-4 text-[10px] text-[#fcea10]">
+              {photos.length} photo{photos.length === 1 ? "" : "s"} · open gallery
+            </div>
+          )}
+        </div>
+      </div>
+      {hasGallery && (
+        <button type="button" onClick={(event) => onOpen(event.currentTarget)} className="focus-ring absolute inset-0 z-10 h-full w-full">
+          <span className="sr-only">{`Open the ${item.title} gallery, ${photos.length} photo${photos.length === 1 ? "" : "s"}`}</span>
+        </button>
+      )}
+    </motion.article>
+  );
 }
 
 function Archive() {
-  return <section id="archive" className="grain bg-[#f5f1e7] py-28 md:py-36"><div className="container"><div className="flex flex-col justify-between gap-7 md:flex-row md:items-end"><div><SectionLabel>03 / The archive</SectionLabel><h2 className="display mt-7 text-[clamp(3.6rem,8vw,8rem)]">THE<br /><span className="text-[#1d71b8]">ARCHIVE.</span></h2></div><div className="max-w-[300px] md:pb-2"><p className="text-sm leading-relaxed text-black/60">A visual collection of the ZeroTheory journey. Real documentation arrives as the next chapters land.</p><div className="mono mt-5 text-[10px] text-[#e6007e]">Workshops · Hackathons · Events · Projects</div></div></div><div className="mt-16 grid gap-4 md:grid-cols-12">{archiveItems.map((item, index) => <motion.article key={item.title} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.12 }} variants={reveal} className={`group relative min-h-[330px] overflow-hidden rounded-[1.25rem] border border-black/10 ${index === 0 ? "md:col-span-7 md:min-h-[460px]" : index === 1 ? "md:col-span-5" : index === 2 ? "md:col-span-5" : "md:col-span-7"}`}><img src={item.image} alt="Abstract ZeroTheory visual placeholder" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" /><div className={`absolute inset-0 ${item.tone === "yellow" ? "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/10 to-[#fcea10]/10" : item.tone === "pink" ? "bg-gradient-to-t from-[#e6007e]/90 via-[#e6007e]/10 to-transparent" : "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/20 to-transparent"}`} /><div className="relative flex h-full min-h-[330px] flex-col justify-between p-6 text-white md:min-h-0"><div className="flex items-start justify-between"><span className="mono rounded-full border border-white/40 bg-black/15 px-3 py-1.5 text-[9px]">{item.category}</span><span className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#1d1d1b] transition-transform duration-300 group-hover:rotate-45"><ArrowUpRight size={16} /></span></div><div><div className="mono mb-3 text-[9px] text-white/65">{item.date}</div><h3 className="display max-w-[420px] text-4xl uppercase md:text-5xl">{item.title}</h3><p className="mt-3 max-w-[390px] text-sm leading-relaxed text-white/75">{item.description}</p></div></div></motion.article>)}</div></div></section>;
+  const galleries = useArchiveGalleries(archiveDocIds);
+  // `activeItem` stays set after closing so the dialog can hand focus back to
+  // the card that opened it.
+  const [activeItem, setActiveItem] = useState<ArchiveItem | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  return (
+    <section id="archive" className="grain bg-[#f5f1e7] py-28 md:py-36">
+      <div className="container">
+        <div className="flex flex-col justify-between gap-7 md:flex-row md:items-end">
+          <div>
+            <SectionLabel>03 / The archive</SectionLabel>
+            <h2 className="display mt-7 text-[clamp(3.6rem,8vw,8rem)]">THE<br /><span className="text-[#1d71b8]">ARCHIVE.</span></h2>
+          </div>
+          <div className="max-w-[300px] md:pb-2">
+            <p className="text-sm leading-relaxed text-black/60">A visual collection of the ZeroTheory journey. Real documentation arrives as the next chapters land.</p>
+            <div className="mono mt-5 text-[10px] text-[#e6007e]">Workshops · Hackathons · Events · Projects</div>
+          </div>
+        </div>
+        <div className="mt-16 grid gap-4 md:grid-cols-12">
+          {archiveItems.map((item, index) => (
+            <ArchiveCard
+              key={item.docId}
+              item={item}
+              index={index}
+              photos={galleries[item.docId] ?? []}
+              onOpen={(trigger) => {
+                triggerRef.current = trigger;
+                setActiveItem(item);
+                setGalleryOpen(true);
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      {activeItem && (
+        <Suspense fallback={null}>
+          <ArchiveGallery
+            open={galleryOpen}
+            onOpenChange={(open) => {
+              setGalleryOpen(open);
+              // Hand focus back to the card that opened the gallery.
+              if (!open) requestAnimationFrame(() => triggerRef.current?.focus());
+            }}
+            title={activeItem.title}
+            category={activeItem.category}
+            photos={galleries[activeItem.docId] ?? []}
+          />
+        </Suspense>
+      )}
+    </section>
+  );
 }
 
 function NextVersion() {
@@ -64,15 +193,15 @@ function Community() {
 }
 
 function Join() {
-  return <section id="join" className="grain bg-[#fcea10] py-28 md:py-36"><div className="container"><div className="grid gap-12 md:grid-cols-[1.25fr_0.75fr] md:items-end"><div><SectionLabel>07 / Your move</SectionLabel><h2 className="display mt-7 max-w-[750px] text-[clamp(4.1rem,9vw,9rem)]">START AT<br /><span className="text-[#1d71b8]">ZERO.</span></h2></div><div className="md:pb-3"><p className="text-xl leading-snug tracking-[-0.04em]">{siteContent.joinBody}</p><div className="mt-8"><ArrowButton href="#contact">Join ZeroTheory</ArrowButton></div><p className="mono mt-5 text-[9px] text-black/45">YOUR_JOIN_LINK_HERE · replace before launch</p></div></div></div></section>;
+  return <section id="join" className="grain bg-[#fcea10] py-28 md:py-36"><div className="container"><div className="grid gap-12 md:grid-cols-[1.25fr_0.75fr] md:items-end"><div><SectionLabel>07 / Your move</SectionLabel><h2 className="display mt-7 max-w-[750px] text-[clamp(4.1rem,9vw,9rem)]">START AT<br /><span className="text-[#1d71b8]">ZERO.</span></h2></div><div className="md:pb-3"><p className="text-xl leading-snug tracking-[-0.04em]">{siteContent.joinBody}</p><div className="mt-8"><ArrowButton href={siteContent.joinUrl}>Join ZeroTheory</ArrowButton></div><p className="mono mt-5 text-[9px] text-black/45">Opens the ZeroTheory WhatsApp community</p></div></div></div></section>;
 }
 
 function Contact() {
-  return <section id="contact" className="grain bg-[#1d1d1b] py-28 text-white md:py-36"><div className="container"><div className="grid gap-16 md:grid-cols-[1fr_0.72fr] md:items-end"><div><SectionLabel inverse>08 / Open channel</SectionLabel><h2 className="display mt-8 text-[clamp(4.2rem,9vw,9rem)]">LET'S<br /><span className="text-[#fcea10]">BUILD.</span></h2><p className="mt-8 max-w-[460px] text-base leading-relaxed text-white/65">For partnerships, schools, collaborations, opportunities and related inquiries, get in touch with ZeroTheory.</p></div><div className="border-t border-white/20 pt-4 md:border-t-0 md:border-l md:pl-9"><div className="mono text-[10px] text-white/45">Revansh Sharma / Founder, ZeroTheory</div><div className="mt-7 space-y-2">{contactLinks.map((link) => <a key={link.label} href={link.href} className="focus-ring group flex items-center justify-between border-b border-white/15 py-4 transition-colors hover:border-[#fcea10]"><span className="text-sm font-bold uppercase tracking-[0.08em] text-white/80 group-hover:text-[#fcea10]">{link.label}</span><span className="max-w-[210px] truncate text-right text-xs text-white/45 group-hover:text-white/75">{link.value}</span><ExternalLink size={14} className="ml-3 shrink-0 text-[#fcea10]" /></a>)}</div></div></div></div></section>;
+  return <section id="contact" className="grain bg-[#1d1d1b] py-28 text-white md:py-36"><div className="container"><div className="grid gap-16 md:grid-cols-[1fr_0.72fr] md:items-end"><div><SectionLabel inverse>08 / Open channel</SectionLabel><h2 className="display mt-8 text-[clamp(4.2rem,9vw,9rem)]">LET'S<br /><span className="text-[#fcea10]">BUILD.</span></h2><p className="mt-8 max-w-[460px] text-base leading-relaxed text-white/65">For partnerships, schools, collaborations, opportunities and related inquiries, get in touch with ZeroTheory.</p></div><div className="border-t border-white/20 pt-4 md:border-t-0 md:border-l md:pl-9"><div className="mono text-[10px] text-white/45">Revansh Sharma / Founder, ZeroTheory</div><div className="mt-7 space-y-2">{contactLinks.map((link) => <a key={link.label} href={link.href} {...(/^https?:\/\//.test(link.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="focus-ring group flex items-center justify-between border-b border-white/15 py-4 transition-colors hover:border-[#fcea10]"><span className="text-sm font-bold uppercase tracking-[0.08em] text-white/80 group-hover:text-[#fcea10]">{link.label}</span><span className="ml-auto max-w-[210px] truncate pl-4 text-right text-xs text-white/45 group-hover:text-white/75">{link.value}</span><ExternalLink size={14} className="ml-3 shrink-0 text-[#fcea10]" /></a>)}</div></div></div></div></section>;
 }
 
 function Footer() {
-  return <footer className="bg-[#1d1d1b] px-6 pb-8 text-white md:px-10"><div className="border-t border-white/15 pt-7"><div className="flex flex-col justify-between gap-8 md:flex-row md:items-end"><div><Logo light /><p className="mt-4 text-xs text-white/45">{siteContent.tagline}</p></div><div className="flex flex-wrap gap-x-6 gap-y-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{[["About", "#about"], ["Archive", "#archive"], ["Community", "#community"], ["Contact", "#contact"]].map(([label, href]) => <a key={label} href={href} className="hover:text-[#fcea10]">{label}</a>)}</div><div className="mono text-[9px] text-white/35">© 2026 ZeroTheory</div></div><div className="mt-10 flex items-center justify-between text-[9px] uppercase tracking-[0.15em] text-white/30"><span>{siteContent.philosophy}</span><span>Made from zero / for what's next</span></div></div></footer>;
+  return <footer className="bg-[#1d1d1b] px-6 pb-8 text-white md:px-10"><div className="border-t border-white/15 pt-7"><div className="flex flex-col justify-between gap-8 md:flex-row md:items-end"><div><Logo className="h-16 md:h-20" /><p className="mt-4 text-xs text-white/45">{siteContent.tagline}</p></div><div className="flex flex-wrap gap-x-6 gap-y-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{[["About", "#about"], ["Archive", "#archive"], ["Community", "#community"], ["Contact", "#contact"]].map(([label, href]) => <a key={label} href={href} className="hover:text-[#fcea10]">{label}</a>)}</div><div className="mono text-[9px] text-white/35">© 2026 ZeroTheory</div></div><div className="mt-10 flex items-center justify-between text-[9px] uppercase tracking-[0.15em] text-white/30"><span>{siteContent.philosophy}</span><span>Made from zero / for what's next</span></div></div></footer>;
 }
 
 export default function Home() {
