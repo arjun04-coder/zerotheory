@@ -11,7 +11,7 @@
  * no token at all.
  */
 export const SANITY_PROJECT_ID =
-  import.meta.env.VITE_SANITY_PROJECT_ID?.trim() || "qkmsxhv6";
+  import.meta.env.VITE_SANITY_PROJECT_ID?.trim() || "sr3ug5gw";
 
 export const SANITY_DATASET =
   import.meta.env.VITE_SANITY_DATASET?.trim() || "production";

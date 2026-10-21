@@ -3,7 +3,7 @@
 Sanity Studio for the ZeroTheory website. It manages the photo galleries behind
 the four Archive cards - nothing else. All page text lives in the website code.
 
-- Project: `qkmsxhv6`
+- Project: `sr3ug5gw`
 - Dataset: `production` (public - anyone can read published content, which is
   what lets the website load photos without a secret key)
 - Hosted Studio: https://zerotheory.sanity.studio (after the first deploy)
