@@ -29,10 +29,10 @@ export const pillars = [
 // `docId` is the Sanity document for that card - it must match
 // studio/lib/archive-cards.ts.
 export const archiveItems = [
-  { docId: "archive-starting-point", title: "The starting point", date: "ZERO THEORY / 01", category: "FOUNDATIONS", description: "A visual study of the early ideas that shaped the community.", tone: "yellow", image: "/images/zerotheory-square.jpg" },
-  { docId: "archive-make-it-real", title: "Make it real", date: "ZERO THEORY / 02", category: "PROJECTS", description: "A reminder that practical work is the fastest way to learn.", tone: "blue", image: "/images/zerotheory-hero.jpg" },
-  { docId: "archive-build-together", title: "Build together", date: "ZERO THEORY / 03", category: "COMMUNITY", description: "A visual study of the people and moments behind the work.", tone: "pink", image: "/images/zerotheory-square.jpg" },
-  { docId: "archive-next-up", title: "Next up: 2.0", date: "ZERO THEORY / 04", category: "FUTURE", description: "The next version is being built in public, one thoughtful detail at a time.", tone: "cream", image: "/images/zerotheory-hero.jpg" },
+  { docId: "archive-starting-point", title: "The starting point", date: "ZERO THEORY / 01", category: "FOUNDATIONS", description: "A visual study of the early ideas that shaped the community.", tone: "yellow", image: "/images/archive-01-from-zero-talk.jpg" },
+  { docId: "archive-make-it-real", title: "Make it real", date: "ZERO THEORY / 02", category: "PROJECTS", description: "A reminder that practical work is the fastest way to learn.", tone: "blue", image: "/images/archive-02-lab-session.jpg" },
+  { docId: "archive-build-together", title: "Build together", date: "ZERO THEORY / 03", category: "COMMUNITY", description: "A visual study of the people and moments behind the work.", tone: "pink", image: "/images/archive-03-school-session.jpg" },
+  { docId: "archive-next-up", title: "Next up: 2.0", date: "ZERO THEORY / 04", category: "FUTURE", description: "The next version is being built in public, one thoughtful detail at a time.", tone: "cream", image: "/images/archive-04-podcast.jpg" },
 ];
 
 export const archiveDocIds = archiveItems.map((item) => item.docId);
@@ -48,7 +48,8 @@ export const contactLinks = [
 export const platformFeatures = ["GAMIFIED LEARNING", "CHALLENGES", "PROJECTS", "ACHIEVEMENTS", "PROGRESSION"];
 
 export const partners = [
-  { name: "GOOGLE", status: "Permission to display: verify" },
-  { name: "MICROSOFT", status: "Permission to display: verify" },
-  { name: "AMD", status: "Permission to display: verify" },
+  { name: "GOOGLE" },
+  { name: "MICROSOFT" },
+  { name: "AMD" },
+  { name: "MUMBAI ONCHAIN WEEK" },
 ];
