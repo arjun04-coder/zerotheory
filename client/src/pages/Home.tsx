@@ -1,10 +1,7 @@
 import { AnimatePresence, motion, useInView, useMotionValue, useSpring, type Variants } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, ChevronDown, ExternalLink, Menu, MoveUpRight, Plus, Sparkles, X } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { archiveDocIds, archiveItems, contactLinks, impactStats, partners, pillars, platformFeatures, siteContent } from "@/data/zeroTheory";
-import { useArchiveGalleries } from "@/hooks/useArchiveGalleries";
-import { coverSrcSet, coverUrl, pickCover } from "@/lib/sanity";
-import type { GalleryPhoto } from "@/lib/sanity";
+import { archiveItems, contactLinks, impactStats, partners, pillars, platformFeatures, siteContent } from "@/data/zeroTheory";
 
 // The gallery pulls in a dialog and a carousel; load it only when a visitor
 // actually opens a card, so the landing page stays light.
@@ -60,7 +57,6 @@ function Impact() {
 type ArchiveItem = (typeof archiveItems)[number];
 
 const ARCHIVE_SPANS = ["md:col-span-7 md:min-h-[460px]", "md:col-span-5", "md:col-span-5", "md:col-span-7"];
-const ARCHIVE_COVER_WIDTHS = [600, 900, 1200, 1600];
 
 function archiveTone(tone: string) {
   if (tone === "yellow") return "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/10 to-[#fcea10]/10";
@@ -68,10 +64,9 @@ function archiveTone(tone: string) {
   return "bg-gradient-to-t from-[#1d1d1b]/90 via-[#1d1d1b]/20 to-transparent";
 }
 
-function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index: number; photos: GalleryPhoto[]; onOpen: (trigger: HTMLButtonElement) => void }) {
-  const cover = pickCover(photos);
+function ArchiveCard({ item, index, onOpen }: { item: ArchiveItem; index: number; onOpen: (trigger: HTMLButtonElement) => void }) {
+  const photos = item.gallery;
   const hasGallery = photos.length > 0;
-  const ratio = index === 0 || index === 3 ? 1.6 : 1.35;
   const imageClass = "absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
 
   return (
@@ -82,20 +77,7 @@ function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index
       variants={reveal}
       className={`group relative min-h-[330px] overflow-hidden rounded-[1.25rem] border border-black/10 ${ARCHIVE_SPANS[index]}`}
     >
-      {cover?.image ? (
-        <img
-          src={coverUrl(cover.image, 1200, Math.round(1200 / ratio))}
-          srcSet={coverSrcSet(cover.image, ARCHIVE_COVER_WIDTHS, ratio)}
-          sizes="(max-width: 768px) 92vw, 720px"
-          alt={cover.alt ?? ""}
-          loading="lazy"
-          decoding="async"
-          className={imageClass}
-          style={cover.lqip ? { backgroundImage: `url(${cover.lqip})`, backgroundSize: "cover" } : undefined}
-        />
-      ) : (
-        <img src={item.image} alt="" loading="lazy" decoding="async" className={imageClass} />
-      )}
+      <img src={item.image} alt="" loading="lazy" decoding="async" className={imageClass} />
       <div className={`absolute inset-0 ${archiveTone(item.tone)}`} />
       <div className="relative flex h-full min-h-[330px] flex-col justify-between p-6 text-white md:min-h-0">
         <div className="flex items-start justify-between">
@@ -125,7 +107,6 @@ function ArchiveCard({ item, index, photos, onOpen }: { item: ArchiveItem; index
 }
 
 function Archive() {
-  const galleries = useArchiveGalleries(archiveDocIds);
   // `activeItem` stays set after closing so the dialog can hand focus back to
   // the card that opened it.
   const [activeItem, setActiveItem] = useState<ArchiveItem | null>(null);
@@ -148,10 +129,9 @@ function Archive() {
         <div className="mt-16 grid gap-4 md:grid-cols-12">
           {archiveItems.map((item, index) => (
             <ArchiveCard
-              key={item.docId}
+              key={item.title}
               item={item}
               index={index}
-              photos={galleries[item.docId] ?? []}
               onOpen={(trigger) => {
                 triggerRef.current = trigger;
                 setActiveItem(item);
@@ -172,7 +152,7 @@ function Archive() {
             }}
             title={activeItem.title}
             category={activeItem.category}
-            photos={galleries[activeItem.docId] ?? []}
+            photos={activeItem.gallery}
           />
         </Suspense>
       )}

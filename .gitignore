@@ -9,7 +9,6 @@ dist/
 # environment files
 .env
 .env.*
-!.env.example
 
 # git bundles used to hand off commits
 *.bundle
@@ -17,9 +16,6 @@ dist/
 # OS clutter
 .DS_Store
 Thumbs.db
-
-# Sanity Studio runtime cache
-.sanity/
 
 # local audit & temp assets
 audit/

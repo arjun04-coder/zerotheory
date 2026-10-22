@@ -15,17 +15,14 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { fullSrcSet, fullUrl } from "@/lib/sanity";
-import type { GalleryPhoto } from "@/lib/sanity";
-
-const WIDTHS = [640, 960, 1280, 1920];
+import type { ArchivePhoto } from "@/data/zeroTheory";
 
 interface ArchiveGalleryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   category?: string;
-  photos: GalleryPhoto[];
+  photos: ArchivePhoto[];
 }
 
 export function ArchiveGallery({ open, onOpenChange, title, category, photos }: ArchiveGalleryProps) {
@@ -102,24 +99,15 @@ export function ArchiveGallery({ open, onOpenChange, title, category, photos }: 
         <Carousel opts={{ loop: many }} setApi={setApi} className="relative bg-black/25">
           <CarouselContent className="ml-0">
             {photos.map((photo) => (
-              <CarouselItem key={photo._key} className="pl-0">
+              <CarouselItem key={photo.src} className="pl-0">
                 <div className="flex h-[58vh] items-center justify-center p-3 md:h-[64vh] md:p-6">
-                  {photo.image && (
-                    <img
-                      src={fullUrl(photo.image, 1280)}
-                      srcSet={fullSrcSet(photo.image, WIDTHS)}
-                      sizes="(max-width: 768px) 94vw, 1100px"
-                      alt={photo.alt ?? ""}
-                      loading="lazy"
-                      decoding="async"
-                      className="max-h-full w-auto max-w-full rounded-lg object-contain"
-                      style={
-                        photo.lqip
-                          ? { backgroundImage: `url(${photo.lqip})`, backgroundSize: "cover" }
-                          : undefined
-                      }
-                    />
-                  )}
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className="max-h-full w-auto max-w-full rounded-lg object-contain"
+                  />
                 </div>
               </CarouselItem>
             ))}

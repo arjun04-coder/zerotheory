@@ -24,18 +24,107 @@ export const pillars = [
   { index: "03", title: "Grow", body: "Connect with people, opportunities, and communities.", color: "pink" },
 ];
 
-// ARCHIVE CARDS. `image` is the picture that ships with the site; it stays in
-// place until someone adds photos in Sanity and ticks one as the card cover.
-// `docId` is the Sanity document for that card - it must match
-// studio/lib/archive-cards.ts.
-export const archiveItems = [
-  { docId: "archive-starting-point", title: "The starting point", date: "ZERO THEORY / 01", category: "FOUNDATIONS", description: "A visual study of the early ideas that shaped the community.", tone: "yellow", image: "/images/archive-01-from-zero-talk.jpg" },
-  { docId: "archive-make-it-real", title: "Make it real", date: "ZERO THEORY / 02", category: "PROJECTS", description: "A reminder that practical work is the fastest way to learn.", tone: "blue", image: "/images/archive-02-lab-session.jpg" },
-  { docId: "archive-build-together", title: "Build together", date: "ZERO THEORY / 03", category: "COMMUNITY", description: "A visual study of the people and moments behind the work.", tone: "pink", image: "/images/archive-03-school-session.jpg" },
-  { docId: "archive-next-up", title: "Next up: 2.0", date: "ZERO THEORY / 04", category: "FUTURE", description: "The next version is being built in public, one thoughtful detail at a time.", tone: "cream", image: "/images/archive-04-podcast.jpg" },
-];
+// ARCHIVE CARDS.
+export type ArchivePhoto = {
+  /** File in client/public/images. */
+  src: string;
+  /** Read aloud by screen readers. Describe what the photo shows. */
+  alt: string;
+  /** Optional line shown under the photo when the gallery is open. */
+  caption?: string;
+};
 
-export const archiveDocIds = archiveItems.map((item) => item.docId);
+/**
+ * The four Archive cards.
+ *
+ * `image` is the picture on the card itself, cropped to the card's shape.
+ * `gallery` is what opens when a visitor clicks the card. Leave `gallery`
+ * empty and the card simply does not open.
+ *
+ * To change a photo: drop the file in client/public/images and point at it
+ * here. Keep photos under about 300 KB.
+ */
+export const archiveItems = [
+  {
+    title: "The starting point",
+    date: "ZERO THEORY / 01",
+    category: "FOUNDATIONS",
+    description: "A visual study of the early ideas that shaped the community.",
+    tone: "yellow",
+    image: "/images/archive-01-from-zero-talk.jpg",
+    gallery: [
+      {
+        src: "/images/photo-from-zero-talk.jpg",
+        alt: "Revansh Sharma presenting the From Zero to Hero session on stage",
+        caption: "From Zero to Hero: how curiosity, consistency and community change everything.",
+      },
+    ],
+  },
+  {
+    title: "Make it real",
+    date: "ZERO THEORY / 02",
+    category: "PROJECTS",
+    description: "A reminder that practical work is the fastest way to learn.",
+    tone: "blue",
+    image: "/images/photo-lab-session.jpg",
+    gallery: [
+      {
+        src: "/images/photo-lab-session.jpg",
+        alt: "Students at workstations during a hands-on ZeroTheory lab session",
+        caption: "A hands-on session, one workstation per student.",
+      },
+      {
+        src: "/images/photo-online-session.jpg",
+        alt: "Twenty-seven participants in a ZeroTheory online session",
+        caption: "Twenty-seven people in one online session.",
+      },
+    ],
+  },
+  {
+    title: "Build together",
+    date: "ZERO THEORY / 03",
+    category: "COMMUNITY",
+    description: "A visual study of the people and moments behind the work.",
+    tone: "pink",
+    image: "/images/archive-03-school-session.jpg",
+    gallery: [
+      {
+        src: "/images/photo-school-audience.jpg",
+        alt: "School students listening during a ZeroTheory school session",
+        caption: "A full hall for a ZeroTheory school session.",
+      },
+      {
+        src: "/images/photo-school-questions.jpg",
+        alt: "A ZeroTheory mentor passing the microphone to a student during questions",
+        caption: "The questions are the best part.",
+      },
+    ],
+  },
+  {
+    title: "Next up: 2.0",
+    date: "ZERO THEORY / 04",
+    category: "FUTURE",
+    description: "The next version is being built in public, one thoughtful detail at a time.",
+    tone: "cream",
+    image: "/images/photo-podcast.jpg",
+    gallery: [
+      {
+        src: "/images/photo-podcast.jpg",
+        alt: "A ZeroTheory podcast interview being recorded in the studio",
+        caption: "Talking about what comes next.",
+      },
+    ],
+  },
+] satisfies ReadonlyArray<{
+  title: string;
+  date: string;
+  category: string;
+  description: string;
+  tone: string;
+  image: string;
+  gallery: ArchivePhoto[];
+}>;
+
 
 // Contact channels. `value` is the short text shown next to each label; http(s) links open in a new tab.
 export const contactLinks = [
